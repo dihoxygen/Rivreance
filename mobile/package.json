@@ -1,0 +1,34 @@
+{
+  "name": "rivreance-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rivreance for iOS and Android: USGS river conditions on a color-coded MapLibre map",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild",
+    "typecheck": "tsc --noEmit",
+    "bundle": "expo export --platform android --output-dir .expo-export"
+  },
+  "dependencies": {
+    "@maplibre/maplibre-react-native": "^11.3.10",
+    "@tanstack/react-query": "^5.102.8",
+    "expo": "~57.0.22",
+    "expo-constants": "~57.0.5",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-svg": "15.15.4"
+  },
+  "devDependencies": {
+    "@maplibre/maplibre-gl-style-spec": "^26.2.1",
+    "@types/geojson": "^7946.0.16",
+    "@types/react": "~19.2.2",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-preset-expo": "~57.0.11",
+    "typescript": "~6.0.3"
+  }
+}
