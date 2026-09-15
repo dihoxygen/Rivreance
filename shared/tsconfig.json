@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    // Tests run under `node --experimental-strip-types`, which needs explicit
+    // extensions on relative imports.
+    "allowImportingTsExtensions": true,
+    // shared/ is consumed by Next.js, Metro, and node's type stripper, so it must
+    // avoid syntax that cannot be erased (enums, parameter properties, namespaces).
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

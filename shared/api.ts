@@ -11,12 +11,12 @@ import type {
 export const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
 
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
     super(message);
     this.name = "ApiError";
+    this.status = status;
   }
 }
 

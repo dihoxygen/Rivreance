@@ -9,5 +9,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "../shared/**/*.ts"],
-  "exclude": ["node_modules", ".expo", ".expo-export", "android", "ios"]
+  "exclude": ["node_modules", ".expo", ".expo-export", "android", "ios", "../shared/tests"]
 }
