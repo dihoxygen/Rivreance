@@ -23,21 +23,74 @@ jobs:
       - name: Test
         run: pytest -q
 
-  frontend:
+  shared:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend
+        working-directory: shared
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: shared/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Typecheck
         run: npm run typecheck
+      # Evaluates the shared map expressions with MapLibre's own engine, so a colouring
+      # regression fails here rather than only on a device.
+      - name: Test
+        run: npm test
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            shared/package-lock.json
+            frontend/package-lock.json
+      # shared/ carries the GeoJSON types that both clients typecheck against.
+      - name: Install shared dependencies
+        run: npm ci
+        working-directory: shared
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: frontend
       - name: Build
         run: npm run build
+        working-directory: frontend
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            shared/package-lock.json
+            mobile/package-lock.json
+      - name: Install shared dependencies
+        run: npm ci
+        working-directory: shared
+      - name: Install dependencies
+        run: npm ci
+        working-directory: mobile
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: mobile
+      # Bundling proves Metro resolves shared/ from outside the Expo project root.
+      # Compiling the native projects would need Xcode and the Android SDK.
+      - name: Bundle
+        run: npm run bundle
+        working-directory: mobile

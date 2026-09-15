@@ -5,8 +5,13 @@ USGS water conditions, with estimated channel velocity, so a kayaker or angler c
 at a glance whether a reach is worth the drive.
 
 ```
-USGS OGC APIs → Python ETL → store (JSON snapshot or Supabase/PostGIS) → FastAPI → Next.js + MapLibre
+                                                                    ┌→ Next.js + MapLibre GL JS (web)
+USGS OGC APIs → Python ETL → store (JSON snapshot or Supabase/PostGIS) → FastAPI ─┤
+                                                                    └→ Expo + MapLibre React Native (iOS/Android)
 ```
+
+Both clients read the same endpoints and share their domain layer, so the map colors
+identically on a laptop and on a phone.
 
 The MVP is scoped to two HUC-8 watersheds: **03160112** (Upper Black Warrior) and
 **03160113** (Lower Black Warrior).
@@ -27,6 +32,9 @@ The MVP is scoped to two HUC-8 watersheds: **03160112** (Upper Black Warrior) an
 - **Honest gray.** Readings older than two hours, stage-only lock-and-dam gages, and
   reaches with no nearby gage stay gray rather than guessing.
 - **24-hour trend charts** in each gage popup, so you can see rising versus falling water.
+- **Web and native clients.** A Next.js map and an Expo app for iOS and Android read the
+  same API and share their types, formatting, and MapLibre layer expressions, so a reach
+  cannot be green in one client and yellow in the other.
 
 ---
 
@@ -58,11 +66,16 @@ backend/
                 compute_conditions · run_pipeline
   api/          FastAPI GeoJSON endpoints
   config/       basins.json · activity_thresholds.json · cross_sections.json
-  tests/        108 tests (hydraulics, ratings, classification, spatial join, API)
+  tests/        111 tests (hydraulics, ratings, classification, spatial join, API)
+shared/         types · format · api (createApi) · mapStyle (basemap + layer expressions)
 frontend/
   app/          Next.js App Router shell and map page
   components/   RiverMap · SitePopup · TrendChart · Legend · ActivityToggle · StatusBanner
-  lib/          typed API client, formatting, MapLibre style
+  lib/          web wiring over shared/ (env-var base URL, MapLibre GL JS casts)
+mobile/
+  screens/      MapScreen
+  components/   RiverMap · SiteSheet · TrendChart · Legend · ActivityToggle · StatusBanner
+  lib/          native wiring over shared/ (dev-host base URL, theme, MapLibre RN casts)
 supabase/
   migrations/   PostGIS schema, RLS policies, GeoJSON view and RPCs
   seed.sql      basins plus provisional thresholds and cross-sections
@@ -89,7 +102,10 @@ python -m etl.run_pipeline --with-flowlines
 # 4. API on http://localhost:8000
 uvicorn api.main:app --reload
 
-# 5. Map on http://localhost:3000 (in another shell)
+# 5. Shared domain layer used by both clients
+cd ../shared && npm install
+
+# 6. Map on http://localhost:3000 (in another shell)
 cd ../frontend
 cp .env.local.example .env.local
 npm install && npm run dev
@@ -101,12 +117,34 @@ Afterwards, refresh conditions every 15–30 minutes with the much faster:
 cd backend && python -m etl.run_pipeline
 ```
 
+### Mobile
+
+MapLibre React Native is a native module, so the app cannot run in Expo Go — it needs a
+development build. With Xcode or the Android SDK installed:
+
+```bash
+cd mobile
+npm install
+npm run ios       # or: npm run android
+```
+
+Both commands run `expo prebuild` on first use and then compile. Afterwards `npm start`
+serves the bundle to the installed development build.
+
+The app defaults to port 8000 on whichever host served the Expo bundle, so a phone on the
+same Wi-Fi reaches the backend without configuration. Point it elsewhere with
+`EXPO_PUBLIC_API_BASE_URL` (see `mobile/.env.local.example`).
+
 ### Checks
 
 ```bash
 cd backend && python -m pytest && python -m ruff check .
 cd frontend && npm run typecheck && npm run build
+cd mobile && npm run typecheck && npm run bundle
 ```
+
+`npm run bundle` exports the Metro bundle, which is the part of the mobile build that can
+be verified without Xcode or the Android SDK.
 
 ---
 
@@ -170,6 +208,9 @@ Two quirks worth knowing, both handled in `lib/usgs.py`:
   dangerous features.
 - **Stage-only gages cannot be classified.** Lock-and-dam pool gages report gage height
   with no discharge, so they render gray.
+- **The mobile app needs a development build.** MapLibre React Native ships native code,
+  so Expo Go cannot load it. CI verifies the Metro bundle and types; compiling the iOS and
+  Android projects needs Xcode or the Android SDK locally.
 
 ---
 
