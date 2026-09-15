@@ -1,0 +1,47 @@
+name: Refresh conditions
+
+# Scheduled refresh of gage readings and segment conditions. River geometry is not
+# refetched here; run the pipeline with --with-flowlines manually when a basin changes.
+#
+# Requires repository secrets SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (and optionally
+# USGS_API_KEY). Without them the job would write to a throwaway runner filesystem, so it
+# skips instead.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: rivreance-etl
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      RIVREANCE_STORE_BACKEND: supabase
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check credentials
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "Supabase secrets are not configured; skipping." >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+        id: creds
+      - name: Install dependencies
+        if: steps.creds.outputs.skip != 'true'
+        run: pip install -e .
+      - name: Run pipeline
+        if: steps.creds.outputs.skip != 'true'
+        run: PYTHONPATH=. python -m etl.run_pipeline
