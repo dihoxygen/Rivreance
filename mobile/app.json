@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Rivreance",
+    "slug": "rivreance",
+    "version": "0.1.0",
+    "scheme": "rivreance",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0c1116",
+    "ios": {
+      "bundleIdentifier": "com.rivreance.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Rivreance shows the river gages nearest to you."
+      }
+    },
+    "android": {
+      "package": "com.rivreance.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": ["@maplibre/maplibre-react-native"]
+  }
+}

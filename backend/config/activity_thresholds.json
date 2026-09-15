@@ -1,0 +1,41 @@
+{
+  "$comment": [
+    "Curated discharge windows (parameter 00060, cfs) per gage and activity.",
+    "These are PROVISIONAL starting points inferred from each station's flow record, not",
+    "official safety ratings. Tune them with local paddling/fishing knowledge.",
+    "Stations without an entry fall back to percentiles of their own recent daily values",
+    "(see lib/classify.thresholds_from_stats)."
+  ],
+  "thresholds": [
+    {
+      "site_number": "02465000",
+      "site_name": "Black Warrior River at Northport, AL",
+      "kayaking": { "min_cfs": 500, "opt_min_cfs": 1500, "opt_max_cfs": 12000, "max_cfs": 30000 },
+      "fishing": { "min_cfs": 300, "opt_min_cfs": 800, "opt_max_cfs": 8000, "max_cfs": 20000 }
+    },
+    {
+      "site_number": "02466030",
+      "site_name": "Black Warrior River at Selden L&D near Eutaw, AL",
+      "kayaking": { "min_cfs": 600, "opt_min_cfs": 1800, "opt_max_cfs": 14000, "max_cfs": 35000 },
+      "fishing": { "min_cfs": 400, "opt_min_cfs": 1000, "opt_max_cfs": 9000, "max_cfs": 22000 }
+    },
+    {
+      "site_number": "02462000",
+      "site_name": "Valley Creek near Oak Grove, AL",
+      "kayaking": { "min_cfs": 60, "opt_min_cfs": 120, "opt_max_cfs": 800, "max_cfs": 1500 },
+      "fishing": { "min_cfs": 15, "opt_min_cfs": 40, "opt_max_cfs": 300, "max_cfs": 800 }
+    },
+    {
+      "site_number": "02464000",
+      "site_name": "North River near Samantha, AL",
+      "kayaking": { "min_cfs": 40, "opt_min_cfs": 80, "opt_max_cfs": 600, "max_cfs": 1200 },
+      "fishing": { "min_cfs": 5, "opt_min_cfs": 15, "opt_max_cfs": 200, "max_cfs": 600 }
+    },
+    {
+      "site_number": "02466500",
+      "site_name": "Big Prairie Creek near Gallion, AL",
+      "kayaking": { "min_cfs": 25, "opt_min_cfs": 60, "opt_max_cfs": 500, "max_cfs": 1000 },
+      "fishing": { "min_cfs": 3, "opt_min_cfs": 10, "opt_max_cfs": 150, "max_cfs": 500 }
+    }
+  ]
+}

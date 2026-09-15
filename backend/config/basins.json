@@ -1,0 +1,19 @@
+{
+  "$comment": "MVP scope: the two Black Warrior HUC-8 watersheds. Bounding boxes come from the USGS Watershed Boundary Dataset (Fabric collection wbd08_20250107).",
+  "basins": [
+    {
+      "huc8": "03160112",
+      "name": "Upper Black Warrior",
+      "bbox": [-87.7434, 33.1264, -86.7785, 33.8426],
+      "center": [-87.261, 33.4845],
+      "default_zoom": 9.0
+    },
+    {
+      "huc8": "03160113",
+      "name": "Lower Black Warrior",
+      "bbox": [-87.9426, 32.41, -87.2401, 33.326],
+      "center": [-87.5914, 32.868],
+      "default_zoom": 9.0
+    }
+  ]
+}

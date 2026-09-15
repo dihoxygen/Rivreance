@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Test
+        run: pytest -q
+
+  # The Supabase Preview check only runs when the repository is linked to a Supabase
+  # branch, so on a fork or an unlinked branch it reports "skipped" and the schema ships
+  # unverified. Applying it to a throwaway PostGIS database covers it either way.
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+      # The migration grants SELECT to Supabase's built-in roles, which exist on a
+      # Supabase project but not in a plain PostGIS image.
+      - name: Create the roles the RLS policies reference
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "
+            do \$\$
+            begin
+              if not exists (select 1 from pg_roles where rolname = 'anon') then
+                create role anon noinherit;
+              end if;
+              if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+                create role authenticated noinherit;
+              end if;
+            end
+            \$\$;"
+      - name: Apply the migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init_rivreance.sql
+      - name: Apply the seed
+        run: psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
+      # A redeploy re-runs both against a live database, so neither may fail or duplicate
+      # the second time.
+      - name: Re-apply both to prove they are idempotent
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init_rivreance.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
+      - name: Check the schema, its RLS, and the RPCs the API calls
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/smoke.sql
+
+  shared:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: shared/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      # Evaluates the shared map expressions with MapLibre's own engine, so a colouring
+      # regression fails here rather than only on a device.
+      - name: Test
+        run: npm test
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            shared/package-lock.json
+            frontend/package-lock.json
+      # shared/ carries the GeoJSON types that both clients typecheck against.
+      - name: Install shared dependencies
+        run: npm ci
+        working-directory: shared
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            shared/package-lock.json
+            mobile/package-lock.json
+      - name: Install shared dependencies
+        run: npm ci
+        working-directory: shared
+      - name: Install dependencies
+        run: npm ci
+        working-directory: mobile
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: mobile
+      # Bundling proves Metro resolves shared/ from outside the Expo project root.
+      # Compiling the native projects would need Xcode and the Android SDK.
+      - name: Bundle
+        run: npm run bundle
+        working-directory: mobile
