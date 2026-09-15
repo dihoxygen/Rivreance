@@ -1,0 +1,31 @@
+{
+  "$comment": [
+    "Trapezoidal channel approximations used by the velocity engine when a station has",
+    "no usable field rating. Values are ESTIMATES scaled to published channel widths and",
+    "measured areas; replace them with surveyed geometry when available.",
+    "zero_flow_stage_ft is the gage height at which flow depth is zero, so flow depth",
+    "d = gage_height - zero_flow_stage."
+  ],
+  "cross_sections": [
+    {
+      "site_number": "02462000",
+      "site_name": "Valley Creek near Oak Grove, AL",
+      "bottom_width_ft": 100.0,
+      "side_slope": 2.5,
+      "zero_flow_stage_ft": 2.5,
+      "manning_n": 0.04,
+      "channel_slope": 0.0012,
+      "source": "estimated from USGS channel measurements (width 114-136 ft)"
+    },
+    {
+      "site_number": "02461500",
+      "site_name": "Valley Creek near Bessemer, AL",
+      "bottom_width_ft": 45.0,
+      "side_slope": 2.0,
+      "zero_flow_stage_ft": 4.6,
+      "manning_n": 0.038,
+      "channel_slope": 0.0015,
+      "source": "estimated from USGS channel measurements"
+    }
+  ]
+}
