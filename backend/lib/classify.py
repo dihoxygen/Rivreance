@@ -94,6 +94,37 @@ def percentile_rank(value: float, values: Sequence[float]) -> float | None:
     return round(100.0 * at_or_below / len(usable), 1)
 
 
+#: Percentiles stored on `ParameterStats`, in order.
+STATS_ANCHORS: tuple[tuple[float, str], ...] = (
+    (5.0, "p05"),
+    (10.0, "p10"),
+    (25.0, "p25"),
+    (50.0, "p50"),
+    (75.0, "p75"),
+    (90.0, "p90"),
+    (95.0, "p95"),
+)
+
+
+def percentile_from_stats(value: float, stats: ParameterStats) -> float:
+    """Interpolate a percentile from the stored anchors.
+
+    Only seven quantiles are kept per station, so the result is piecewise linear
+    between them and clamped to 5–95: a reading beyond either tail reports as "at
+    least as extreme as the 5th/95th percentile" rather than inventing precision.
+    """
+    points = [(percentile, getattr(stats, attribute)) for percentile, attribute in STATS_ANCHORS]
+    if value <= points[0][1]:
+        return points[0][0]
+    for (low_pct, low_value), (high_pct, high_value) in zip(points, points[1:], strict=False):
+        if value <= high_value:
+            if high_value <= low_value:
+                return high_pct
+            fraction = (value - low_value) / (high_value - low_value)
+            return round(low_pct + fraction * (high_pct - low_pct), 1)
+    return points[-1][0]
+
+
 def thresholds_from_stats(stats: ParameterStats, activity: Activity) -> ActivityThresholds:
     """Derive a provisional flow window from a station's own record."""
     min_key, opt_min_key, opt_max_key, max_key = ACTIVITY_PERCENTILE_ANCHORS[activity]

@@ -113,7 +113,9 @@ class OgcFeaturesClient:
                     backoff,
                 )
                 await asyncio.sleep(backoff)
-        raise UsgsApiError(f"{url} failed after {self._settings.max_retries} attempts") from last_error
+        raise UsgsApiError(
+            f"{url} failed after {self._settings.max_retries} attempts"
+        ) from last_error
 
     async def iter_items(
         self,
@@ -181,7 +183,9 @@ class WaterDataClient:
     #: The service accepts comma-separated ids; keep URLs comfortably short.
     SITE_CHUNK_SIZE = 50
 
-    def __init__(self, *, settings: Settings | None = None, client: httpx.AsyncClient | None = None):
+    def __init__(
+        self, *, settings: Settings | None = None, client: httpx.AsyncClient | None = None
+    ) -> None:
         self._settings = settings or get_settings()
         self._ogc = OgcFeaturesClient(
             self._settings.usgs_ogc_base_url,
@@ -273,7 +277,9 @@ class WaterDataClient:
             limit=max_points,
         )
 
-    async def field_measurements(self, site_ids: Sequence[str], *, max_points: int = 200) -> list[Feature]:
+    async def field_measurements(
+        self, site_ids: Sequence[str], *, max_points: int = 200
+    ) -> list[Feature]:
         """Latest discrete samples, shown as a separate map layer."""
         features: list[Feature] = []
         for chunk in chunked(site_ids, self.SITE_CHUNK_SIZE):
@@ -294,7 +300,9 @@ class FabricClient:
     WBD_HUC8_COLLECTION = "wbd08_20250107"
     FLOWLINE_COLLECTION = "nhdflowline_network"
 
-    def __init__(self, *, settings: Settings | None = None, client: httpx.AsyncClient | None = None):
+    def __init__(
+        self, *, settings: Settings | None = None, client: httpx.AsyncClient | None = None
+    ) -> None:
         self._settings = settings or get_settings()
         self._ogc = OgcFeaturesClient(
             self._settings.usgs_fabric_base_url, settings=self._settings, client=client

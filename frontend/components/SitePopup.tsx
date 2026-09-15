@@ -11,6 +11,7 @@ import {
   formatClock,
   formatFlow,
   formatNumber,
+  formatOrdinal,
   STATUS_COLORS,
   STATUS_LABELS,
   TREND_ICONS,
@@ -93,7 +94,7 @@ export function SitePopup({ site, onClose }: SitePopupProps) {
         />
         <Metric
           label="Percentile"
-          value={site.percentile === null ? "—" : `${formatNumber(site.percentile, 0)}th`}
+          value={formatOrdinal(site.percentile)}
           hint="of the recent record"
         />
         <Metric label="Reading age" value={formatAge(site.age_minutes)} hint={formatClock(site.observed_at)} />

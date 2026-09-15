@@ -57,6 +57,16 @@ export function formatNumber(value: number | null | undefined, digits = 1): stri
   });
 }
 
+export function formatOrdinal(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const rounded = Math.round(value);
+  const suffix =
+    rounded % 100 >= 11 && rounded % 100 <= 13
+      ? "th"
+      : (["th", "st", "nd", "rd"][rounded % 10] ?? "th");
+  return `${rounded}${suffix}`;
+}
+
 export function formatFlow(cfs: number | null | undefined): string {
   if (cfs === null || cfs === undefined) return "—";
   return `${cfs.toLocaleString(undefined, { maximumFractionDigits: cfs < 100 ? 1 : 0 })} cfs`;

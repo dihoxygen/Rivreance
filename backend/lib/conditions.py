@@ -25,7 +25,7 @@ from lib.classify import (
     color_for,
     detect_trend,
     is_stale,
-    percentile_rank,
+    percentile_from_stats,
     resolve_thresholds,
 )
 from lib.config import DISCHARGE_PARAMETER, GAGE_HEIGHT_PARAMETER, Activity, Settings
@@ -155,20 +155,11 @@ def build_site_condition(
         )
 
     status, reason = classify_value(discharge.value, thresholds)
-    percentile = None
-    if discharge_stats is not None:
-        percentile = percentile_rank(
-            discharge.value,
-            [
-                discharge_stats.p05,
-                discharge_stats.p10,
-                discharge_stats.p25,
-                discharge_stats.p50,
-                discharge_stats.p75,
-                discharge_stats.p90,
-                discharge_stats.p95,
-            ],
-        )
+    percentile = (
+        percentile_from_stats(discharge.value, discharge_stats)
+        if discharge_stats is not None
+        else None
+    )
     return SiteCondition(
         status=status,
         color=color_for(status),

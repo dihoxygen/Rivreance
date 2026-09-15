@@ -9,6 +9,7 @@ from lib.classify import (
     classify_value,
     detect_trend,
     is_stale,
+    percentile_from_stats,
     percentile_rank,
     quantile,
     resolve_thresholds,
@@ -64,6 +65,23 @@ def test_percentile_rank_is_share_at_or_below():
     assert percentile_rank(3, [1, 2, 3, 4]) == pytest.approx(75.0)
     assert percentile_rank(0, [1, 2, 3, 4]) == pytest.approx(0.0)
     assert percentile_rank(1, []) is None
+
+
+def test_percentile_from_stats_interpolates_between_anchors():
+    stats = build_stats(list(range(1, 101)), parameter_code="00060", window_days=30)
+    assert stats is not None
+
+    assert percentile_from_stats(stats.p50, stats) == pytest.approx(50.0)
+    assert percentile_from_stats(stats.p75, stats) == pytest.approx(75.0)
+    midpoint = (stats.p50 + stats.p75) / 2
+    assert percentile_from_stats(midpoint, stats) == pytest.approx(62.5, abs=0.6)
+
+
+def test_percentile_from_stats_clamps_both_tails():
+    stats = build_stats(list(range(1, 101)), parameter_code="00060", window_days=30)
+    assert stats is not None
+    assert percentile_from_stats(-5.0, stats) == 5.0
+    assert percentile_from_stats(10_000.0, stats) == 95.0
 
 
 def test_derived_thresholds_are_activity_specific():

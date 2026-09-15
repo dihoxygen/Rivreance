@@ -1,7 +1,11 @@
 "use client";
 
 import type { FeatureCollection } from "geojson";
-import maplibregl, { type GeoJSONSource, type MapMouseEvent } from "maplibre-gl";
+import maplibregl, {
+  type ExpressionSpecification,
+  type GeoJSONSource,
+  type MapMouseEvent,
+} from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
 import { buildMapStyle } from "@/lib/mapStyle";
@@ -63,19 +67,27 @@ export function RiverMap({
       map.addSource(SEGMENT_SOURCE, { type: "geojson", data: EMPTY_COLLECTION });
       map.addSource(SITE_SOURCE, { type: "geojson", data: EMPTY_COLLECTION });
 
+      // Casing only under classified reaches: on gray ones it reads as a black river.
       map.addLayer({
         id: "river-segments-casing",
         type: "line",
         source: SEGMENT_SOURCE,
         layout: { "line-cap": "round", "line-join": "round" },
+        filter: ["!=", ["get", "status"], "gray"],
         paint: {
           "line-color": "#05080b",
-          "line-opacity": 0.55,
-          "line-width": ["+", ["get", "line_width"], 2.5],
+          "line-opacity": 0.4,
+          "line-width": ["+", ["get", "line_width"], 2],
         },
       });
 
       // Data-driven color: the API ships the traffic-light color on each feature.
+      // Unclassified reaches stay thinner and softer so the colored ones lead the eye.
+      const grayScale = (factor: number): ExpressionSpecification => [
+        "*",
+        ["get", "line_width"],
+        ["case", ["==", ["get", "status"], "gray"], factor * 0.7, factor],
+      ];
       map.addLayer({
         id: "river-segments-line",
         type: "line",
@@ -83,22 +95,17 @@ export function RiverMap({
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
           "line-color": ["get", "color"],
-          "line-opacity": [
-            "case",
-            ["==", ["get", "status"], "gray"],
-            0.45,
-            0.95,
-          ],
+          "line-opacity": ["case", ["==", ["get", "status"], "gray"], 0.6, 0.95],
           "line-width": [
             "interpolate",
             ["linear"],
             ["zoom"],
             7,
-            ["*", ["get", "line_width"], 0.6],
+            grayScale(0.6),
             11,
-            ["get", "line_width"],
+            grayScale(1),
             14,
-            ["*", ["get", "line_width"], 2.2],
+            grayScale(2.2),
           ],
         },
       });
