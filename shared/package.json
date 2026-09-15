@@ -1,0 +1,11 @@
+{
+  "name": "@rivreance/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Domain types, formatting, API client, and map styling shared by the web and mobile clients",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@types/geojson": "^7946.0.16"
+  }
+}

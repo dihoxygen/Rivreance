@@ -1,42 +1,33 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, FilterSpecification, StyleSpecification } from "maplibre-gl";
 
-/**
- * Basemap. USGS publishes public-domain topo tiles that need no API key and suit an
- * outdoor map, so they are the default. Set `NEXT_PUBLIC_MAPTILER_KEY` to swap in
- * MapTiler's vector Outdoor style instead.
- */
-const USGS_TOPO_TILES =
-  "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}";
+import * as style from "@shared/mapStyle";
 
-const USGS_ATTRIBUTION =
-  '<a href="https://www.usgs.gov/programs/national-geospatial-program/national-map" target="_blank" rel="noreferrer">USGS The National Map</a>';
-
-export const MAP_ATTRIBUTION_NOTE = "Conditions derived from USGS Water Data · Basemap USGS";
+/** Casts the shared, platform-neutral expressions into MapLibre GL JS's types once. */
+const expression = (value: style.StyleExpression) => value as unknown as ExpressionSpecification;
+const filter = (value: style.StyleExpression) => value as unknown as FilterSpecification;
 
 export function buildMapStyle(): StyleSpecification | string {
-  const maptilerKey = process.env.NEXT_PUBLIC_MAPTILER_KEY;
-  if (maptilerKey) {
-    return `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${maptilerKey}`;
-  }
-  return {
-    version: 8,
-    sources: {
-      "usgs-topo": {
-        type: "raster",
-        tiles: [USGS_TOPO_TILES],
-        tileSize: 256,
-        maxzoom: 16,
-        attribution: USGS_ATTRIBUTION,
-      },
-    },
-    layers: [
-      { id: "background", type: "background", paint: { "background-color": "#0c1116" } },
-      {
-        id: "usgs-topo",
-        type: "raster",
-        source: "usgs-topo",
-        paint: { "raster-opacity": 0.85, "raster-saturation": -0.15 },
-      },
-    ],
-  };
+  return style.buildMapStyle(process.env.NEXT_PUBLIC_MAPTILER_KEY) as StyleSpecification | string;
 }
+
+export const segment = {
+  color: expression(style.SEGMENT_COLOR),
+  opacity: expression(style.SEGMENT_OPACITY),
+  width: expression(style.SEGMENT_WIDTH),
+  casingColor: style.SEGMENT_CASING_COLOR,
+  casingOpacity: style.SEGMENT_CASING_OPACITY,
+  casingWidth: expression(style.SEGMENT_CASING_WIDTH),
+  casingFilter: filter(style.SEGMENT_CASING_FILTER),
+  hitWidth: style.SEGMENT_HIT_WIDTH,
+};
+
+export const site = {
+  color: expression(style.SITE_COLOR),
+  strokeColor: style.SITE_STROKE_COLOR,
+  radius: expression(style.SITE_RADIUS),
+  haloRadius: style.SITE_HALO_RADIUS,
+  haloOpacity: style.SITE_HALO_OPACITY,
+  haloFilter: (selectedSiteId: string | null) => filter(style.siteHaloFilter(selectedSiteId)),
+};
+
+export const { MAP_ATTRIBUTION_NOTE, SEGMENT_SOURCE_ID, SITE_SOURCE_ID } = style;

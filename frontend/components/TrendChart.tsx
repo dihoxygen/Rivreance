@@ -10,8 +10,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { formatNumber, formatTimeOfDay } from "@/lib/format";
-import type { SeriesPoint } from "@/lib/types";
+import { formatNumber, formatTimeOfDay } from "@shared/format";
+import type { SeriesPoint } from "@shared/types";
 
 interface TrendChartProps {
   points: SeriesPoint[];

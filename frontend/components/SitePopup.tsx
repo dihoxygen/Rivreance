@@ -17,8 +17,8 @@ import {
   TREND_ICONS,
   TREND_LABELS,
   VELOCITY_METHOD_LABELS,
-} from "@/lib/format";
-import type { ActivityThresholds, SiteProperties } from "@/lib/types";
+} from "@shared/format";
+import type { ActivityThresholds, SiteProperties } from "@shared/types";
 
 const PARAMETER_LABELS: Record<string, { label: string; unit: string }> = {
   "00060": { label: "Discharge", unit: "cfs" },

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { STATUS_COLORS, STATUS_DESCRIPTIONS, STATUS_LABELS } from "@/lib/format";
+import { STATUS_COLORS, STATUS_DESCRIPTIONS, STATUS_LABELS } from "@shared/format";
 import { MAP_ATTRIBUTION_NOTE } from "@/lib/mapStyle";
-import type { Status } from "@/lib/types";
+import type { Status } from "@shared/types";
 
 const ORDER: Status[] = ["green", "yellow", "red", "gray"];
 

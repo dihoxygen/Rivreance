@@ -9,8 +9,8 @@ import { RiverMap } from "@/components/RiverMap";
 import { SitePopup } from "@/components/SitePopup";
 import { StatusBanner } from "@/components/StatusBanner";
 import { api, queryKeys } from "@/lib/api";
-import { STATUS_COLORS, STATUS_LABELS } from "@/lib/format";
-import type { Activity, Status } from "@/lib/types";
+import { STATUS_COLORS, STATUS_LABELS } from "@shared/format";
+import type { Activity, Status } from "@shared/types";
 
 const STATUS_ORDER: Status[] = ["green", "yellow", "red", "gray"];
 

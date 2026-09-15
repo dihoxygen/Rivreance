@@ -1,6 +1,6 @@
 "use client";
 
-import type { Activity } from "@/lib/types";
+import type { Activity } from "@shared/types";
 
 const OPTIONS: { value: Activity; label: string; icon: string }[] = [
   { value: "kayaking", label: "Kayaking", icon: "🛶" },

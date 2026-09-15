@@ -1,18 +1,18 @@
 "use client";
 
 import type { FeatureCollection } from "geojson";
-import maplibregl, {
-  type ExpressionSpecification,
-  type GeoJSONSource,
-  type MapMouseEvent,
-} from "maplibre-gl";
+import maplibregl, { type GeoJSONSource, type MapMouseEvent } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
-import { buildMapStyle } from "@/lib/mapStyle";
-import type { Basin, SegmentCollection, SiteCollection } from "@/lib/types";
+import {
+  buildMapStyle,
+  segment as segmentStyle,
+  SEGMENT_SOURCE_ID as SEGMENT_SOURCE,
+  site as siteStyle,
+  SITE_SOURCE_ID as SITE_SOURCE,
+} from "@/lib/mapStyle";
+import type { Basin, SegmentCollection, SiteCollection } from "@shared/types";
 
-const SEGMENT_SOURCE = "river-segments";
-const SITE_SOURCE = "gage-sites";
 const SEGMENT_HIT_LAYER = "river-segments-hit";
 const SITE_LAYER = "gage-sites-circle";
 
@@ -67,55 +67,40 @@ export function RiverMap({
       map.addSource(SEGMENT_SOURCE, { type: "geojson", data: EMPTY_COLLECTION });
       map.addSource(SITE_SOURCE, { type: "geojson", data: EMPTY_COLLECTION });
 
-      // Casing only under classified reaches: on gray ones it reads as a black river.
       map.addLayer({
         id: "river-segments-casing",
         type: "line",
         source: SEGMENT_SOURCE,
         layout: { "line-cap": "round", "line-join": "round" },
-        filter: ["!=", ["get", "status"], "gray"],
+        filter: segmentStyle.casingFilter,
         paint: {
-          "line-color": "#05080b",
-          "line-opacity": 0.4,
-          "line-width": ["+", ["get", "line_width"], 2],
+          "line-color": segmentStyle.casingColor,
+          "line-opacity": segmentStyle.casingOpacity,
+          "line-width": segmentStyle.casingWidth,
         },
       });
 
-      // Data-driven color: the API ships the traffic-light color on each feature.
-      // Unclassified reaches stay thinner and softer so the colored ones lead the eye.
-      const grayScale = (factor: number): ExpressionSpecification => [
-        "*",
-        ["get", "line_width"],
-        ["case", ["==", ["get", "status"], "gray"], factor * 0.7, factor],
-      ];
       map.addLayer({
         id: "river-segments-line",
         type: "line",
         source: SEGMENT_SOURCE,
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": ["get", "color"],
-          "line-opacity": ["case", ["==", ["get", "status"], "gray"], 0.6, 0.95],
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            7,
-            grayScale(0.6),
-            11,
-            grayScale(1),
-            14,
-            grayScale(2.2),
-          ],
+          "line-color": segmentStyle.color,
+          "line-opacity": segmentStyle.opacity,
+          "line-width": segmentStyle.width,
         },
       });
 
-      // Invisible fat line so clicks and hovers are forgiving on thin creeks.
       map.addLayer({
         id: SEGMENT_HIT_LAYER,
         type: "line",
         source: SEGMENT_SOURCE,
-        paint: { "line-color": "#000000", "line-opacity": 0, "line-width": 14 },
+        paint: {
+          "line-color": "#000000",
+          "line-opacity": 0,
+          "line-width": segmentStyle.hitWidth,
+        },
       });
 
       map.addLayer({
@@ -123,12 +108,12 @@ export function RiverMap({
         type: "circle",
         source: SITE_SOURCE,
         paint: {
-          "circle-radius": 16,
-          "circle-color": ["get", "color"],
-          "circle-opacity": 0.22,
+          "circle-radius": siteStyle.haloRadius,
+          "circle-color": siteStyle.color,
+          "circle-opacity": siteStyle.haloOpacity,
           "circle-stroke-width": 0,
         },
-        filter: ["==", ["get", "site_id"], ""],
+        filter: siteStyle.haloFilter(null),
       });
 
       map.addLayer({
@@ -136,9 +121,9 @@ export function RiverMap({
         type: "circle",
         source: SITE_SOURCE,
         paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 5, 12, 9],
-          "circle-color": ["get", "color"],
-          "circle-stroke-color": "#f8fafc",
+          "circle-radius": siteStyle.radius,
+          "circle-color": siteStyle.color,
+          "circle-stroke-color": siteStyle.strokeColor,
           "circle-stroke-width": 1.6,
         },
       });
@@ -209,7 +194,7 @@ export function RiverMap({
     if (!map) return;
     const applyFilter = () => {
       if (!map.getLayer("gage-sites-halo")) return;
-      map.setFilter("gage-sites-halo", ["==", ["get", "site_id"], selectedSiteId ?? ""]);
+      map.setFilter("gage-sites-halo", siteStyle.haloFilter(selectedSiteId));
     };
     if (readyRef.current) applyFilter();
     else map.once("rivreance.ready", applyFilter);

@@ -1,7 +1,7 @@
 "use client";
 
-import { formatAge, formatClock } from "@/lib/format";
-import type { HealthResponse } from "@/lib/types";
+import { formatAge, formatClock } from "@shared/format";
+import type { HealthResponse } from "@shared/types";
 
 interface StatusBannerProps {
   health: HealthResponse | undefined;
