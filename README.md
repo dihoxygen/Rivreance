@@ -84,10 +84,10 @@ cp .env.example .env
 
 # 3. First pipeline run — --with-flowlines downloads river geometry (~40 s per basin)
 cd backend
-PYTHONPATH=. python -m etl.run_pipeline --with-flowlines
+python -m etl.run_pipeline --with-flowlines
 
 # 4. API on http://localhost:8000
-PYTHONPATH=. uvicorn api.main:app --reload
+uvicorn api.main:app --reload
 
 # 5. Map on http://localhost:3000 (in another shell)
 cd ../frontend
@@ -98,7 +98,7 @@ npm install && npm run dev
 Afterwards, refresh conditions every 15–30 minutes with the much faster:
 
 ```bash
-cd backend && PYTHONPATH=. python -m etl.run_pipeline
+cd backend && python -m etl.run_pipeline
 ```
 
 ### Checks

@@ -201,6 +201,23 @@ def test_series_endpoint_404s_for_unknown_parameters(client: TestClient):
     assert response.status_code == 404
 
 
+def test_health_is_not_cached_so_freshness_stays_true(client: TestClient, store: FileStore):
+    first = client.get("/api/v1/health").json()
+    assert first["last_run"]["run_id"] == "run-1"
+
+    store.write_run(
+        IngestionRun(
+            run_id="run-2",
+            started_at=NOW,
+            finished_at=NOW,
+            status="success",
+            basins=["03160112"],
+        )
+    )
+
+    assert client.get("/api/v1/health").json()["last_run"]["run_id"] == "run-2"
+
+
 def test_responses_are_cached_so_the_store_is_read_once(client: TestClient, store: FileStore):
     reads = {"count": 0}
     original = store.read_segments

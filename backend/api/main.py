@@ -77,8 +77,12 @@ def _validate_activity(activity: str) -> Activity:
 
 @app.get(f"{API_PREFIX}/health")
 async def health(store: StoreDep, config: SettingsDep) -> dict[str, Any]:
-    """Pipeline freshness — what a monitor (or the map's warning banner) should poll."""
-    run = await _cached("latest-run", store.read_latest_run)
+    """Pipeline freshness — what a monitor (or the map's warning banner) should poll.
+
+    Deliberately uncached: a cached answer would report its own age as the data's age,
+    which is the one thing this endpoint exists to get right.
+    """
+    run = await asyncio.to_thread(store.read_latest_run)
     now = datetime.now(UTC)
     age_minutes = None
     if run is not None and run.finished_at is not None:

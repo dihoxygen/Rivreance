@@ -44,4 +44,4 @@ jobs:
         run: pip install -e .
       - name: Run pipeline
         if: steps.creds.outputs.skip != 'true'
-        run: PYTHONPATH=. python -m etl.run_pipeline
+        run: python -m etl.run_pipeline
