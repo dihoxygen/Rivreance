@@ -88,3 +88,14 @@ cython_debug/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Rivreance pipeline snapshots (regenerate with `python -m etl.run_pipeline`)
+backend/.data/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
