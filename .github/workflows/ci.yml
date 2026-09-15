@@ -23,6 +23,59 @@ jobs:
       - name: Test
         run: pytest -q
 
+  # The Supabase Preview check only runs when the repository is linked to a Supabase
+  # branch, so on a fork or an unlinked branch it reports "skipped" and the schema ships
+  # unverified. Applying it to a throwaway PostGIS database covers it either way.
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v4
+      # The migration grants SELECT to Supabase's built-in roles, which exist on a
+      # Supabase project but not in a plain PostGIS image.
+      - name: Create the roles the RLS policies reference
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "
+            do \$\$
+            begin
+              if not exists (select 1 from pg_roles where rolname = 'anon') then
+                create role anon noinherit;
+              end if;
+              if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+                create role authenticated noinherit;
+              end if;
+            end
+            \$\$;"
+      - name: Apply the migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init_rivreance.sql
+      - name: Apply the seed
+        run: psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
+      # A redeploy re-runs both against a live database, so neither may fail or duplicate
+      # the second time.
+      - name: Re-apply both to prove they are idempotent
+        run: |
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init_rivreance.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
+      - name: Check the schema, its RLS, and the RPCs the API calls
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/smoke.sql
+
   shared:
     runs-on: ubuntu-latest
     defaults:

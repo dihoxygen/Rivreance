@@ -139,12 +139,29 @@ same Wi-Fi reaches the backend without configuration. Point it elsewhere with
 
 ```bash
 cd backend && python -m pytest && python -m ruff check .
+cd shared   && npm run typecheck && npm test
 cd frontend && npm run typecheck && npm run build
-cd mobile && npm run typecheck && npm run bundle
+cd mobile   && npm run typecheck && npm run bundle
 ```
 
 `npm run bundle` exports the Metro bundle, which is the part of the mobile build that can
 be verified without Xcode or the Android SDK.
+
+The schema is checked by applying it to a throwaway PostGIS database, which is what CI's
+`database` job does. Against a local PostgreSQL 16 with PostGIS:
+
+```bash
+createdb rivreance_check
+psql -d rivreance_check -c "create role anon noinherit" -c "create role authenticated noinherit"
+psql -v ON_ERROR_STOP=1 -d rivreance_check -f supabase/migrations/0001_init_rivreance.sql
+psql -v ON_ERROR_STOP=1 -d rivreance_check -f supabase/seed.sql
+psql -v ON_ERROR_STOP=1 -d rivreance_check -f supabase/tests/smoke.sql
+```
+
+`anon` and `authenticated` are created by Supabase but not by a plain PostGIS image, and
+the migration's RLS policies grant SELECT to them. `smoke.sql` asserts the table and
+policy counts, that RLS is enabled on every Rivreance table, and that the view and the two
+RPCs the API calls are callable.
 
 ---
 
